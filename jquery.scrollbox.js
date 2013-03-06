@@ -43,8 +43,7 @@ Email: ryanb@fullscreen.net
 				var numPages = methods.numPages.apply(self);
 				$(self).data({ numPages:numPages });
 
-				// Here's where we evenly apportion the widths of all scrollbox items, 
-				// so we don't have a differently sized last page in the event that the `contentWidth` isn't a multiple of the `boxWidth`.
+				// Here's where we evenly apportion the widths of all scrollbox items.
 				var itemCount = $li.length;
 
 				// Fill in the last page so that the number of items on it is the same as the maximum number of items per page.
@@ -145,8 +144,6 @@ Email: ryanb@fullscreen.net
 				var offset = $(this).scrollLeft();
 				var boxWidth = $(this).data('boxWidth');
 				var page = Math.round(offset / boxWidth) + 1;
-
-				// var contentWidth = $(this).data('contentWidth');
 
 				return Math.floor(page);
 			},
