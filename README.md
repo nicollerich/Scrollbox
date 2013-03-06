@@ -4,10 +4,12 @@ Usage
 HTML
 ----
 
-		<ul class="scrollbox">	// The scrollbox itself must be a <ul> or an <ol> element.
-	  	<li>foo</li>					// The scrollbox must contain <li> elements.
-	  	<li>bar</li>					// The <li> items contain automatically centered, custom content.
-	  	<li>baz</li>					// The scrollbox lays items out based on their collective width.
+The scrollbox itself must be a `<ul>` or an `<ol>` element. The scrollbox must contain `<li>` elements. The `<li>` items contain automatically centered, custom content. The scrollbox automatically assigns items to pages.
+
+		<ul class="scrollbox">
+	  	<li>foo</li>
+	  	<li>bar</li>
+	  	<li>baz</li>
 	  	<li>foofoo</li>
 	  	<li>foobar</li>
 	  	<li>foobaz</li>
@@ -18,6 +20,8 @@ HTML
 
 CSS
 ---
+
+This should be your base CSS, but you can override it with custom styling.
 
 		.scrollbox {																					
 		  box-shadow: inset 0 1px 4px rgba(0,0,0,.5);
@@ -70,8 +74,7 @@ CSS
 JavaScript
 ----------
 
-		// Scrollbox is a jQuery plugin.
-		// Call it like the following when the element(s) you want to scrollbox-ify have loaded.
+Scrollbox is a jQuery plugin. Call it like the following when the element(s) you want to scrollbox-ify have loaded.
 
 		$('.scrollbox').scrollbox({		// You can use selectors that match any number of elements you want to scrollbox-ify.
       pageIndicator:true,					// See the defaults in the source below for a guide on what options are available.
