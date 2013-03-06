@@ -77,7 +77,10 @@ JavaScript
 Scrollbox is a jQuery plugin. Call it like the following when the element(s) you want to scrollbox-ify have loaded.
 
 		$('.scrollbox').scrollbox({		// You can use selectors that match any number of elements you want to scrollbox-ify.
-      pageIndicator:true,					// See the defaults in the source below for a guide on what options are available.
-      scrollToPage:true,
-      snapToPage:true
+			maxItemsPerPage: 4,     		// The maximum number of scrollbox items per page.
+      pageIndicator:true,					// Shows the page indicator.
+      scrollToPage:true,					// Makes the page indicator items clickable (only relevant when `pageIndicator` is true.
+      snapToPage:true							// Makes the scrollbox snap to the nearest page when the user stops scrolling it.
     });
+
+
