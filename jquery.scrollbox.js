@@ -1,35 +1,162 @@
-(function( $ ) {
+/***********************************************************************************
 
-	var boxWidth;
-	var numPages;
+Author: Ryan Barry
+Email: ryanb@fullscreen.net
+
+Usage: 
+	
+	HTML should look something like this:
+		<ul class="scrollbox">	// The scrollbox itself must be a <ul> or an <ol> element.
+	  	<li>foo</li>					// The scrollbox must contain <li> elements.
+	  	<li>bar</li>					// The <li> items contain automatically centered, custom content.
+	  	<li>baz</li>					// The scrollbox lays items out based on their collective width.
+	  	<li>foofoo</li>
+	  	<li>foobar</li>
+	  	<li>foobaz</li>
+	  	<li>barfoo</li>
+	  	<li>barbar</li>
+	  	<li>barbaz</li>
+	  </ul>
+
+	CSS base looks like this:
+		.scrollbox {																					
+		  box-shadow: inset 0 1px 4px rgba(0,0,0,.5);
+		  -webkit-box-shadow: inset 0 1px 4px rgba(0,0,0,.5);
+		  -moz-box-shadow: inset 0 1px 4px rgba(0,0,0,.5);
+			min-height: 2em;
+			list-style: none;
+			border-radius: 4px;
+			padding: 0;
+			white-space: nowrap;
+			overflow: scroll;
+			left: 0;
+			right: 0;
+			margin-left: auto;
+			margin-right: auto;
+		}
+		.scrollbox li {
+			display: inline-block;
+			margin-right: -4px;
+			text-align: center;
+			vertical-align: text-top;
+			white-space: normal;
+		}
+		.scrollbox-page-indicator {
+			list-style: none;
+			margin: .2em;
+			padding: 0;
+			text-align: center;
+		}
+		.scrollbox-page-indicator li {
+			display: inline-block;
+			width: 9px;
+			height: 9px;
+			border-radius: 9px;
+			-webkit-border-radius: 9px;
+			-moz-border-radius: 9px;
+			background-color: #dbdbdb;
+			margin-right: 5px;
+
+		  -webkit-transition: all 0.2s ease-out;
+		 	-moz-transition: all 0.2s ease-out;
+		  -ms-transition: all 0.2s ease-out;
+		  -o-transition: all 0.2s ease-out;
+		  transition: all 0.2s ease-out;
+		}
+		.scrollbox-page-indicator li.current {
+			background-color: #929292;
+		}		
+
+	JS should look like this:
+		// Scrollbox is a jQuery plugin.
+		// Call it like the following when the element(s) you want to scrollbox-ify have loaded.
+
+		$('.scrollbox').scrollbox({		// You can use selectors that match any number of elements you want to scrollbox-ify.
+      pageIndicator:true,					// See the defaults in the source below for a guide on what options are available.
+      scrollToPage:true,
+      snapToPage:true
+    });
+	
+***********************************************************************************/
+
+
+(function( $ ) {
 
   $.fn.scrollbox = function(options) {
 
+  	// Default settings.
   	var settings = $.extend({
-  		pageIndicator:true,
-  		scrollToPage:true
+
+  		maxItemsPerPage: 4,			// The maximum number of scrollbox items per page.
+  		pageIndicator: true,		// Shows the page indicator.
+  		scrollToPage: true,			// Makes the page indicator items clickable.
+  		snapToPage: true				// Makes the scrollbox snap to the nearest page when the user stops scrolling it.
+
     }, options);
 
-    var lastPage = 0;
-    var contentWidth = 0;
-
     var methods = {
+    	// `init` attaches behavior to the matched elements, and syncs their state every time it is called.
     	init: function() {
-	  		boxWidth = $(this).width();
+	    	var self = this;
 
-		    $(this).find('li').each(function(i, elem) {
-		    	var w = $(elem).width();
-		    	contentWidth += w;
-		    });
+	    	// Saves the settings for this scrollbox to the DOM.
+	    	$(self).data(settings);
 
-		    numPages = methods.numPages.apply(this);
+	  		var boxWidth = $(self).width();
+	  		// var contentWidth = 0;
+
+	  		var $li = $(self).find('li');
+
+	  		// Scrollbox items are resized (using inline styles) to fit on pages.
+	  		// Since we're going to sum up the widths of our scrollbox items, we should clear their inline styles.
+	  		$li.width('');
+
+	  		// Finding the total width of all the scrollbox items.
+		    // $li.each(function(index, elem) {
+		    // 	var w = $(elem).outerWidth(true);
+		    // 	contentWidth += w;
+		    // });
+
+		    // Writing object state to the DOM.
+		    $(self).data({ /*contentWidth:contentWidth,*/ boxWidth:boxWidth });
+
+		    // `numPages` depends on /*both `contentWidth` and */`boxWidth`, so we have to save those before we save the number of pages.
+		    var numPages = methods.numPages.apply(self);
+		    $(self).data({ numPages:numPages });
+
+		    // Here's where we evenly apportion the widths of all scrollbox items, 
+		    // so we don't have a differently sized last page in the event that the `contentWidth` isn't a multiple of the `boxWidth`.
+		    var itemCount = $li.length;
+		    // var totalWidth = boxWidth * numPages;
+		    // var itemWidth = totalWidth * numPages;
+
+	  		// Fill in the last page so that the number of items on it is the same as the maximum number of items per page.
+	  		// This will cause the item layout, and the pagination feature to not look terrible.
+		    var blankItems = settings.maxItemsPerPage - (itemCount % settings.maxItemsPerPage);
+		    if (blankItems === settings.maxItemsPerPage)
+		    	blankItems = 0;
+
+		    for(var i = 0; i < blankItems; i++) {
+		    	$(self).append('<li class="scrollbox-blank"></li>');	
+		    }
+
+		    // This satisfies the `maxItemsPerPage` expectancy, but the last page screws up if its item count is less than the maximum.
+		    $li = $(self).find('li');
+		    var itemWidth = boxWidth / settings.maxItemsPerPage;
+		    $li.width(itemWidth);
 
 		    if (settings.pageIndicator) {
-		    	$(this).after('<ul class="scrollbox-page-indicator"></ul>');
+		    	// The `pageIndicator` setting shows the page indicator.
 
-		    	var page = methods.curPage.apply(this);
+		    	var page = methods.curPage.apply(self);
+
+		    	// Removing any previously placed indicator.
+		    	var $pageIndicator = $(self).next('.scrollbox-page-indicator').remove();
+
+		    	$(self).after('<ul class="scrollbox-page-indicator"></ul>');
+
+		    	// Filling the indicator container with page items.
 		    	for(var i = 0; i < numPages; i++) {
-
 		    		var classStr = '';
 		    		var current = (i === (page - 1));
 		    		if (current) {
@@ -37,38 +164,110 @@
 		    		}
 		    		
 		    		var li = '<li'+classStr+'></li>';
-		    		if (!current && settings.scrollToPage) {
+		    		if (settings.scrollToPage) {
 		    			li = '<a href="javascript:void(0)">'+li+'</a>';
 		    		}
 
-		    		$('.scrollbox-page-indicator').append(li);
+		    		$(self).next('.scrollbox-page-indicator').append(li);
 		    	}
+
+		    	// Detecting when the page changes as the scrollbox is scrolled, so that the page indicator can be updated.
+			    var lastPage = 0;
+			    $(self).scroll(function() {
+			    	var newPage = methods.curPage.apply(self);
+
+			    	if (newPage !== lastPage) {
+			    		lastPage = newPage;
+			    		methods.updatePageIndicator.apply(self, [newPage]);
+			    	}
+			    });
+
+			    if (settings.scrollToPage) {
+			    	// The `scrollToPage` setting makes the page indicator items clickable.
+
+				    var _navAction = function(event) {
+				    	// We determine the page we should scroll to based on the index of the page indicator item that was clicked.
+				    	var i = $(event.target).parent().index();
+				    	var pageNum = i + 1;
+				    	methods.scrollToPage.apply(this, [pageNum]);
+				    };
+
+			    	$(self).next('.scrollbox-page-indicator').find('a').click(function(e) {
+			    		_navAction.apply(self, [e]);
+			    	});
+			    }
+		    }
+
+		    if (settings.snapToPage) {
+		    	// The `snapToPage` setting makes the scrollbox snap to the nearest page after it is scrolled.
+
+		    	// Since there is no event that is triggered for when the scrollbox stops scrolling, 
+		    	// we must repeatedly keep checking for it.
+
+			    var timer;
+			    var snap = function () { 
+		        var nearestPage = methods.nearestPage.apply(self);
+		        var offset = $(self).scrollLeft();
+		        var numPages = methods.numPages.apply(self);
+
+		        methods.scrollToPage.apply(self, [nearestPage, 80]);
+			    };
+
+			    $(self).bind('scroll', function () {
+			    	// While the user is scrolling, the timer keeps clearing.
+		        clearTimeout(timer);
+
+		    		// When the timer goes off, we snap to the nearest page.
+		        timer = setTimeout(snap, 120);
+			    });
 		    }
     	},
     	curPage: function() {
+    		// Returns the page the user is currently on.
+
 				var offset = $(this).scrollLeft();
+				var boxWidth = $(this).data('boxWidth');
+				var page = Math.round(offset / boxWidth) + 1;
+
+				// var contentWidth = $(this).data('contentWidth');
+
+				return Math.floor(page);
+			},
+			nearestPage: function() {
+				// Returns the page number of the nearest page.
+
+				var offset = $(this).scrollLeft();
+				var boxWidth = $(this).data('boxWidth');
 				var page = offset / boxWidth;
 
-				return Math.floor(page) + 1;
+				return Math.round(page) + 1;
 			},
 			numPages: function() {
-		    var numPages = Math.floor(contentWidth / boxWidth);
+				// Returns the total number of pages.
+
+				// var contentWidth = $(this).data('contentWidth');
+				// var boxWidth = $(this).data('boxWidth');
+				var itemCount = $(this).find('li').length;
+				var maxItemsPerPage = $(this).data('maxItemsPerPage');
+
+		    var numPages = Math.ceil(itemCount / maxItemsPerPage);
+		    // console.log(itemCount);
+		    // console.log(maxItemsPerPage);
+
 		    if (numPages < 1)
 		    	numPages = 1;
 
 		    return numPages;
 			},
-			pageChanged: function(newPage) {
-				console.log('pageChanged to '+newPage);
-
-				if (settings.pageIndicator) {
-					var $indicator = $('.scrollbox-page-indicator');
+			updatePageIndicator: function(newPage) {
+				// Updates the page indicator (if one is present).
+				if ($(this).data('pageIndicator')) {
+					var $indicator = $(this).next('.scrollbox-page-indicator');
 
 					var $current = $indicator.find('li.current').removeClass('current');
 
-					if (settings.scrollToPage) {
-						$current.wrap('<a href="javascript:void(0)"></a>');
-						$indicator.find('a:nth-child('+newPage+') li').addClass('current').unwrap();
+					if ($(this).data('scrollToPage')) {
+						$indicator.find('a:nth-child('+newPage+') li').addClass('current');
 					}
 					else {
 						$indicator.find('li:nth-child('+newPage+')').addClass('current');
@@ -76,23 +275,25 @@
 				}
 			},
 			offsetForPage: function(pageNum) {
-				return (pageNum - 1) * boxWidth;
+				// Converts `pageNum` into a pixel offset relative to the far left edge of the scrollbox content.
+
+				var boxWidth = $(this).data('boxWidth');
+				return ((pageNum - 1) * boxWidth);
 			},
-			scrollToPage: function(pageNum) {
-				var offset = methods.offsetForPage.apply(this);
-				// $('.')
+			scrollToPage: function(pageNum, duration) {
+				// Jumps the scrollbox to `pageNum`. Animates for `duration` milliseconds.
+
+				var offset = methods.offsetForPage.apply(this, [pageNum]);
+
+				var d = 400;
+				if (typeof duration !== 'undefined')
+					d = duration;
+
+				$(this).animate({ scrollLeft:offset }, d, 'swing');
 			}
     };
-    m_ = methods;	// debug
 
-    $(this).scroll(function() {
-    	var newPage = methods.curPage.apply(this);
-    	if (newPage !== lastPage) {
-    		lastPage = newPage;
-    		methods.pageChanged.apply(this, [newPage]);
-    	}
-    });
-
+    // Invoking this plugin calls `init` for each matched element.
   	return this.each(function() {
   		methods.init.apply(this);
 	  });
