@@ -83,4 +83,4 @@ Scrollbox is a jQuery plugin. When all the above HTML and CSS have been loaded, 
 			snapToPage:true							// Makes the scrollbox snap to the nearest page when the user stops scrolling it.
 		});
 
-
+Every time this is called, the scrollbox will sync with the DOM state.

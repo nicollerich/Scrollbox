@@ -37,8 +37,8 @@ Email: ryanb@fullscreen.net
 	  		$li.width('');
 
 		    // Writing object state to the DOM.
-		    // `numPages` depends on `boxWidth`, so we have to save those before we save the number of pages.
-		    $(self).data({ /*contentWidth:contentWidth,*/ boxWidth:boxWidth });
+		    // `numPages` depends on `boxWidth`, so we have to save it before we get the number of pages.
+		    $(self).data({ boxWidth:boxWidth });
 
 		    var numPages = methods.numPages.apply(self);
 		    $(self).data({ numPages:numPages });
