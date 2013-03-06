@@ -103,7 +103,6 @@ Usage:
 	    	$(self).data(settings);
 
 	  		var boxWidth = $(self).width();
-	  		// var contentWidth = 0;
 
 	  		var $li = $(self).find('li');
 
@@ -111,24 +110,16 @@ Usage:
 	  		// Since we're going to sum up the widths of our scrollbox items, we should clear their inline styles.
 	  		$li.width('');
 
-	  		// Finding the total width of all the scrollbox items.
-		    // $li.each(function(index, elem) {
-		    // 	var w = $(elem).outerWidth(true);
-		    // 	contentWidth += w;
-		    // });
-
 		    // Writing object state to the DOM.
+		    // `numPages` depends on `boxWidth`, so we have to save those before we save the number of pages.
 		    $(self).data({ /*contentWidth:contentWidth,*/ boxWidth:boxWidth });
 
-		    // `numPages` depends on /*both `contentWidth` and */`boxWidth`, so we have to save those before we save the number of pages.
 		    var numPages = methods.numPages.apply(self);
 		    $(self).data({ numPages:numPages });
 
 		    // Here's where we evenly apportion the widths of all scrollbox items, 
 		    // so we don't have a differently sized last page in the event that the `contentWidth` isn't a multiple of the `boxWidth`.
 		    var itemCount = $li.length;
-		    // var totalWidth = boxWidth * numPages;
-		    // var itemWidth = totalWidth * numPages;
 
 	  		// Fill in the last page so that the number of items on it is the same as the maximum number of items per page.
 	  		// This will cause the item layout, and the pagination feature to not look terrible.
@@ -185,7 +176,7 @@ Usage:
 			    if (settings.scrollToPage) {
 			    	// The `scrollToPage` setting makes the page indicator items clickable.
 
-				    var _navAction = function(event) {
+				    var clickAction = function(event) {
 				    	// We determine the page we should scroll to based on the index of the page indicator item that was clicked.
 				    	var i = $(event.target).parent().index();
 				    	var pageNum = i + 1;
@@ -193,7 +184,7 @@ Usage:
 				    };
 
 			    	$(self).next('.scrollbox-page-indicator').find('a').click(function(e) {
-			    		_navAction.apply(self, [e]);
+			    		clickAction.apply(self, [e]);
 			    	});
 			    }
 		    }
@@ -218,7 +209,7 @@ Usage:
 		        clearTimeout(timer);
 
 		    		// When the timer goes off, we snap to the nearest page.
-		        timer = setTimeout(snap, 120);
+		        timer = setTimeout(snap, 140);
 			    });
 		    }
     	},
@@ -245,14 +236,10 @@ Usage:
 			numPages: function() {
 				// Returns the total number of pages.
 
-				// var contentWidth = $(this).data('contentWidth');
-				// var boxWidth = $(this).data('boxWidth');
 				var itemCount = $(this).find('li').length;
 				var maxItemsPerPage = $(this).data('maxItemsPerPage');
 
 		    var numPages = Math.ceil(itemCount / maxItemsPerPage);
-		    // console.log(itemCount);
-		    // console.log(maxItemsPerPage);
 
 		    if (numPages < 1)
 		    	numPages = 1;
