@@ -4,19 +4,19 @@ Usage
 HTML
 ----
 
-The scrollbox itself must be a `<ul>` or an `<ol>` element. The scrollbox must contain `<li>` elements. The the custom content in each item will be centered. The scrollbox automatically assigns items to pages.
+The scrollbox must contain a `<div>` element for each item. The the custom content in each item will be centered. The scrollbox automatically assigns items to pages.
 
-		<ul class="scrollbox">
-			<li>foo</li>
-			<li>bar</li>
-			<li>baz</li>
-			<li>foofoo</li>
-			<li>foobar</li>
-			<li>foobaz</li>
-			<li>barfoo</li>
-			<li>barbar</li>
-			<li>barbaz</li>
-		</ul>
+		<div class="scrollbox">
+			<div>foo</div>
+			<div>bar</div>
+			<div>baz</div>
+			<div>foofoo</div>
+			<div>foobar</div>
+			<div>foobaz</div>
+			<div>barfoo</div>
+			<div>barbar</div>
+			<div>barbaz</div>
+		</div>
 
 CSS
 ---
@@ -24,27 +24,28 @@ CSS
 This is recommended for your base CSS, but you can override it with custom styling.
 
 		.scrollbox {
-			box-shadow: inset 0 1px 4px rgba(0,0,0,.5);
-			-webkit-box-shadow: inset 0 1px 4px rgba(0,0,0,.5);
-			-moz-box-shadow: inset 0 1px 4px rgba(0,0,0,.5);
 			min-height: 2em;
-			list-style: none;
 			border-radius: 4px;
 			padding: 0;
-			white-space: nowrap;
 			overflow: scroll;
 			left: 0;
 			right: 0;
 			margin-left: auto;
 			margin-right: auto;
+
+			-webkit-box-shadow: inset 0 1px 4px rgba(0,0,0,.5);
+			-moz-box-shadow: inset 0 1px 4px rgba(0,0,0,.5);
+			box-shadow: inset 0 1px 4px rgba(0,0,0,.5);
 		}
-		.scrollbox li {
-			display: inline-block;
-			margin-right: -4px;
+		.scrollbox-item-container {
+			overflow: auto;
+		}
+		.scrollbox-item-container > div {
 			text-align: center;
 			vertical-align: text-top;
-			white-space: normal;
+			float: left;
 		}
+
 		.scrollbox-page-indicator {
 			list-style: none;
 			margin: .2em;
@@ -61,10 +62,10 @@ This is recommended for your base CSS, but you can override it with custom styli
 			background-color: #dbdbdb;
 			margin-right: 5px;
 
-			-webkit-transition: all 0.2s ease-out;
-			-moz-transition: all 0.2s ease-out;
-			-ms-transition: all 0.2s ease-out;
-			-o-transition: all 0.2s ease-out;
+			-webkit-transition: all 0.2s ease-out;  /* Saf3.2+, Chrome */
+			-moz-transition: all 0.2s ease-out;  /* FF4+ */
+			-ms-transition: all 0.2s ease-out;  /* IE10 */
+			-o-transition: all 0.2s ease-out;  /* Opera 10.5+ */
 			transition: all 0.2s ease-out;
 		}
 		.scrollbox-page-indicator li.current {

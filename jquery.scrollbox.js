@@ -30,11 +30,13 @@ Email: ryanb@fullscreen.net
 
 				var boxWidth = $(self).width();
 
-				var $li = $(self).find('li');
+				var $items = $(self).find('> div');
+				$items.wrapAll('<div class="scrollbox-item-container"></div>');
+				var $container = $(self).find('.scrollbox-item-container');
 
 				// Scrollbox items are resized (using inline styles) to fit on pages.
 				// Since we're going to sum up the widths of our scrollbox items, we should clear their inline styles.
-				$li.width('');
+				$items.width('');
 
 				// Writing object state to the DOM.
 				// `numPages` depends on `boxWidth`, so we have to save it before we get the number of pages.
@@ -43,23 +45,18 @@ Email: ryanb@fullscreen.net
 				var numPages = methods.numPages.apply(self);
 				$(self).data({ numPages:numPages });
 
+				var containerWidth = boxWidth * numPages;
+				$container.width(containerWidth);
+
 				// Here's where we evenly apportion the widths of all scrollbox items.
-				var itemCount = $li.length;
+				var itemCount = $items.length;
 
-				// Fill in the last page so that the number of items on it is the same as the maximum number of items per page.
-				// This will cause the item layout, and the pagination feature to not look terrible.
-				var blankItems = settings.maxItemsPerPage - (itemCount % settings.maxItemsPerPage);
-				if (blankItems === settings.maxItemsPerPage)
-					blankItems = 0;
+				if (itemCount > settings.maxItemsPerPage)
+					itemCount = settings.maxItemsPerPage;
 
-				for(var i = 0; i < blankItems; i++) {
-					$(self).append('<li class="scrollbox-blank"></li>');	
-				}
-
-				// This satisfies the `maxItemsPerPage` expectancy, but the last page screws up if its item count is less than the maximum.
-				$li = $(self).find('li');
-				var itemWidth = boxWidth / settings.maxItemsPerPage;
-				$li.width(itemWidth);
+				$items = $(self).find('.scrollbox-item-container > div');
+				var itemWidth = boxWidth / itemCount;
+				$items.width(itemWidth);
 
 				if (settings.pageIndicator) {
 					// The `pageIndicator` setting shows the page indicator.
@@ -159,7 +156,7 @@ Email: ryanb@fullscreen.net
 			numPages: function() {
 				// Returns the total number of pages.
 
-				var itemCount = $(this).find('li').length;
+				var itemCount = $(this).find('.scrollbox-item-container > div').length;
 				var maxItemsPerPage = $(this).data('maxItemsPerPage');
 
 				var numPages = Math.ceil(itemCount / maxItemsPerPage);
