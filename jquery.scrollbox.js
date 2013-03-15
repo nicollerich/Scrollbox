@@ -8,17 +8,47 @@ Email: ryanb@fullscreen.net
 
 (function( $ ) {
 
-	$.fn.scrollbox = function(options) {
+	$.fn.scrollbox = function(options, arg1, arg2) {
 
-		// Default settings.
-		var settings = $.extend({
+		var _offsetForPage = function(pageNum) {
+			var boxWidth = $(this).data('boxWidth');
+			return ((pageNum - 1) * boxWidth);
+		};
 
-			maxItemsPerPage: 4,			// The maximum number of scrollbox items per page.
-			pageIndicator: true,		// Shows the page indicator.
-			scrollToPage: true,			// Makes the page indicator items clickable.
-			snapToPage: true				// Makes the scrollbox snap to the nearest page when the user stops scrolling it.
+		var _scrollToPage = function(pageNum, duration) {
+			var offset = _offsetForPage.call(this, pageNum);
 
-		}, options);
+			var d = 400;
+			if (typeof duration !== 'undefined')
+				d = duration;
+
+			$(this).animate({ scrollLeft:offset }, d, 'swing');
+		};
+
+		var settings = {};
+		settings.maxItemsPerPage = $(self).data('maxItemsPerPage');
+		settings.pageIndicator = $(self).data('pageIndicator');
+		settings.scrollToPage = $(self).data('scrollToPage');
+		settings.snapToPage = $(self).data('snapToPage');
+
+		if (typeof options === 'object') {
+			// Default settings.
+			settings = $.extend({
+
+				maxItemsPerPage: 4,			// The maximum number of scrollbox items per page.
+				pageIndicator: true,		// Shows the page indicator.
+				scrollToPage: true,			// Makes the page indicator items clickable.
+				snapToPage: true				// Makes the scrollbox snap to the nearest page when the user stops scrolling it.
+
+			}, options);
+		}
+		else if (typeof options === 'string') {
+			if (options === 'scrollToPage') {
+				var pageNum = arg1;
+				var duration = arg2;
+				_scrollToPage.call(this, pageNum, duration);
+			}
+		}
 
 		var methods = {
 			// `init` attaches behavior to the matched elements, and syncs their state every time it is called.
@@ -31,8 +61,10 @@ Email: ryanb@fullscreen.net
 				var boxWidth = $(self).width();
 
 				var $items = $(self).find('> div');
-				$items.wrapAll('<div class="scrollbox-item-container"></div>');
 				var $container = $(self).find('.scrollbox-item-container');
+				if ($container.length === 0) {
+					$items.wrapAll('<div class="scrollbox-item-container"></div>');
+				}
 
 				// Scrollbox items are resized (using inline styles) to fit on pages.
 				// Since we're going to sum up the widths of our scrollbox items, we should clear their inline styles.
@@ -156,9 +188,8 @@ Email: ryanb@fullscreen.net
 			numPages: function() {
 				// Returns the total number of pages.
 
-				var itemCount = $(this).find('.scrollbox-item-container > div').length;
+				var itemCount = $(this).find('.scrollbox-item-container > div:visible').length;
 				var maxItemsPerPage = $(this).data('maxItemsPerPage');
-
 				var numPages = Math.ceil(itemCount / maxItemsPerPage);
 
 				if (numPages < 1)
@@ -183,22 +214,13 @@ Email: ryanb@fullscreen.net
 			},
 			offsetForPage: function(pageNum) {
 				// Converts `pageNum` into a pixel offset relative to the far left edge of the scrollbox content.
-
-				var boxWidth = $(this).data('boxWidth');
-				return ((pageNum - 1) * boxWidth);
+				return _offsetForPage.call(this, pageNum);
 			},
 			scrollToPage: function(pageNum, duration) {
 				// Jumps the scrollbox to `pageNum`. Animates for `duration` milliseconds.
-
-				var offset = methods.offsetForPage.apply(this, [pageNum]);
-
-				var d = 400;
-				if (typeof duration !== 'undefined')
-					d = duration;
-
-				$(this).animate({ scrollLeft:offset }, d, 'swing');
+				_scrollToPage.call(this, pageNum, duration);
 			}
-    };
+    	};
 
 		// Invoking this plugin calls `init` for each matched element.
 		return this.each(function() {
